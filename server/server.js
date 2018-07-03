@@ -14,8 +14,8 @@ app.get('/todos', (req, res) => {
         res.send({todos});
     }, (e) => {
         res.status(400).send(e);
-    })
-})
+    });
+});
 
 app.post('/todos', (req, res) => {
     var todo = new Todo({
@@ -26,7 +26,7 @@ app.post('/todos', (req, res) => {
         res.send(doc);
     }, (e) => {
         res.status(400).send(e);
-    })
+    });
 });
 
 app.listen(3000, () => {
