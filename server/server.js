@@ -26,11 +26,11 @@ app.get('/todos/:id', (req, res) => {
             if(todo){
                 res.send({todo});
             } else {
-                res.status(400).send('Could not find todo');
+                res.status(404).send('Could not find todo');
             }
         })
     } else {
-        res.status(404).send('Could not find ID');
+        res.status(400).send('ID is invalid');
     }
 })
 
