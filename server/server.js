@@ -35,6 +35,22 @@ app.get('/todos/:id', (req, res) => {
     }
 })
 
+app.delete('/todos/:id', (req, res) => {
+    var id = req.params.id;
+
+    if(ObjectID.isValid(id)){
+        Todo.findByIdAndRemove(id).then((todo) => {
+            if(todo){
+                res.send({todo});
+            } else{
+                res.status(404).send('Could not find todo');
+            }
+        })
+    } else{
+        res.status(400).send('ID is invalid');
+    }
+})
+
 app.post('/todos', (req, res) => {
     var todo = new Todo({
         text: req.body.text
