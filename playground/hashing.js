@@ -5,7 +5,9 @@ var data = {
     id: 10
 }
 
-var token = jwt.sign(data, '123abc');
+var token = jwt.sign({
+    data: 'Shit'
+}, '123abc');
 var decoded = jwt.verify(token, '123abc');
 
 console.log(token);
