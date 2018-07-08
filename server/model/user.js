@@ -70,6 +70,26 @@ UserSchema.statics.findByToken = function (token) {
     })
 }
 
+UserSchema.statics.findByCredentials = function (email, password) {
+    const User = this;
+    
+    return User.findOne({email}).then((user) => {
+        if(!user){
+            return Promise.reject();
+        }
+
+        return new Promise((resolve, reject) => {
+            bcrypt.compare(password, user.password, (err, res) => {
+                if(res) {
+                    resolve(user);
+                } else {
+                    reject();
+                }
+            })
+        })
+    })
+};
+
 UserSchema.pre('save', function(next) { //Middleware that will run everytime we try to save an user
     var user = this;
     if(user.isModified('password')){ //If password is modified, encrypt the password
