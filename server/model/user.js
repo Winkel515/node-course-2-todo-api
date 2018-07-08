@@ -70,10 +70,9 @@ UserSchema.statics.findByToken = function (token) {
     })
 }
 
-UserSchema.pre('save', function(next) {
+UserSchema.pre('save', function(next) { //Middleware that will run everytime we try to save an user
     var user = this;
-
-    if(user.isModified('password')){
+    if(user.isModified('password')){ //If password is modified, encrypt the password
         bcrypt.genSalt(10, (err, salt) => {
             bcrypt.hash(user.password, salt, (err, hash) => {
                 user.password = hash;
@@ -81,7 +80,7 @@ UserSchema.pre('save', function(next) {
             })
         })
         // next(); But not here
-    } else {
+    } else { //Else, do nothing
         next();
     }
 })

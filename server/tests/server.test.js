@@ -4,22 +4,11 @@ const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../model/todo');
+const {User} = require('./../model/user');
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed')
 
-const todos = [{
-    text: 'First test todo',
-    _id: new ObjectID()
-}, {
-    text: 'Second test todo',
-    _id: new ObjectID(),
-    completedAt: 333,
-    completed: true
-}];
-
-beforeEach((done) => {
-    Todo.remove({}).then(() => {
-        return Todo.insertMany(todos);
-    }).then(() => done());
-})
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe('POST /todos', () => {
     it('should create a new todo', (done) => {
@@ -163,6 +152,83 @@ describe('PATCH /todos/:id', () => {
             .expect((res) => {
                 expect(res.body.todo.completedAt).toBeNull();
             })
+            .end(done);
+    })
+})
+
+describe('GET /users/me', () => {
+    it('should return user if authenticated', (done) => {
+        request(app)
+            .get('/users/me')
+            .set('x-auth', users[0].tokens[0].token)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body._id).toBe(users[0]._id.toHexString());
+                expect(res.body.email).toBe(users[0].email);
+            })
+            .end(done);
+    })
+
+    it('should return a 401 if not authenticated', (done) => {
+        request(app)
+            .get('/users/me')
+            .expect(401)
+            .expect((res) => {
+                expect(res.body).toEqual({}); //Because we do not want to return anything to unauthorized users
+            })
+            .end(done);
+    })
+})
+
+describe('GET /users', () => {
+    it('should create an user when email does not already exist', (done) => {
+        var email = "jimmy@hotmail.com";
+        var password = "secret123";
+
+        request(app)
+            .post('/users')
+            .send({
+                email,
+                password
+            })
+            .expect(200)
+            .expect((res) => {
+                expect(res.header['x-auth']).toBeTruthy();
+                expect(res.body.email).toBe(email);
+                expect(res.body._id).toBeTruthy(); 
+            })
+            .end((err) => {
+                if(err){
+                    return done(err);
+                }
+
+                //This code checks inside the User collection to see if it it exists and if password is hashed
+                User.findOne({email}).then((user) => {
+                    expect(user).toBeTruthy();
+                    expect(user.password).not.toBe(password); // Not the password --> Hashed
+                    done();
+                }).catch((e) => {
+                    done(e);
+                })
+            });
+    })
+
+    it('should return validation errors if request is email is not valid', (done) =>{
+        request(app)
+            .post('/users')
+            .send({email: 'g3434', password: 'password123'})
+            .expect(400)
+            .end(done);
+    })
+
+    it('should not create user if email is already exists', (done) => {
+        request(app)
+            .post('/users')
+            .send({
+                email: users[0].email,
+                password: users.password
+            })
+            .expect(400)
             .end(done);
     })
 })
